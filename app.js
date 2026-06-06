@@ -1794,8 +1794,8 @@ function renderAnalyticsExtraStats(filteredBets) {
     if (!extraStatsContainer) return;
 
     // Segment Favorites vs Underdogs
-    const favoriteBets = filteredBets.filter(b => Number(b.odds) <= 1.87);
-    const underdogBets = filteredBets.filter(b => Number(b.odds) > 1.87);
+    const favoriteBets = filteredBets.filter(b => Number(b.odds) < 1.9);
+    const underdogBets = filteredBets.filter(b => Number(b.odds) >= 1.9);
 
     function getSubsetStats(subset) {
         let subsetStake = 0;
@@ -1913,13 +1913,13 @@ function renderAnalyticsExtraStats(filteredBets) {
 
         <!-- Favorites vs Underdogs -->
         <div class="stats-row" style="border-bottom: none; margin-top: 8px;">
-            <span class="stats-label" style="font-weight: 600;">Favorites (Odds &le; 1.87)</span>
+            <span class="stats-label" style="font-weight: 600;">Favorites (Odds < 1.90)</span>
             <span class="stats-value ${favStats.profit >= 0 ? 'positive' : 'negative'}">
                 ${favStats.winRate.toFixed(0)}% WR | ${favStats.profit >= 0 ? '+' : ''}${favStats.roi.toFixed(0)}% ROI
             </span>
         </div>
         <div class="stats-row" style="border-bottom: none;">
-            <span class="stats-label" style="font-weight: 600;">Underdogs (Odds > 1.87)</span>
+            <span class="stats-label" style="font-weight: 600;">Underdogs (Odds &ge; 1.90)</span>
             <span class="stats-value ${dogStats.profit >= 0 ? 'positive' : 'negative'}">
                 ${dogStats.winRate.toFixed(0)}% WR | ${dogStats.profit >= 0 ? '+' : ''}${dogStats.roi.toFixed(0)}% ROI
             </span>
