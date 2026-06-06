@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeTrack | Premium Sports Betting Analytics</title>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- SIDEBAR NAV -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <div class="logo-icon">E</div>
+            <span class="logo-text">EdgeTrack</span>
+        </div>
+        <div class="profile-selector-container">
+            <select class="profile-select-dropdown" id="sidebar-profile-select" onchange="handleProfileSelectChange(this.value)">
+                <!-- Populated dynamically -->
+            </select>
+            <button class="btn-profile-manage" id="btn-manage-profiles" title="Manage Profiles" onclick="openModal('profiles')">
+                <i data-lucide="settings"></i>
+            </button>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" data-tab="dashboard">
+                <a>
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item" data-tab="bets">
+                <a>
+                    <i data-lucide="dices"></i>
+                    <span>Bets Manager</span>
+                </a>
+            </li>
+            <li class="nav-item" data-tab="transactions">
+                <a>
+                    <i data-lucide="arrow-left-right"></i>
+                    <span>Transactions</span>
+                </a>
+            </li>
+            <li class="nav-item" data-tab="analytics">
+                <a>
+                    <i data-lucide="line-chart"></i>
+                    <span>Analytics</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="balance-card-sidebar">
+                <span class="balance-label">Total Bankroll</span>
+                <span class="balance-val" id="sidebar-total-balance">€0.00</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN INTERFACE WRAPPER -->
+    <div class="main-wrapper">
+        
+        <!-- HEADER TOPBAR -->
+        <header class="header">
+            <button class="btn-sidebar-toggle" id="btn-sidebar-toggle" title="Toggle Sidebar">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="header-title-section">
+                <h1 id="page-title">Dashboard</h1>
+                <p id="page-subtitle">Track, analyze, and optimize your betting strategy</p>
+            </div>
+            <div class="header-actions">
+                <div class="wallet-display">
+                    <div class="wallet-item">
+                        <span class="wallet-item-label">Real Cash</span>
+                        <span class="wallet-item-val" id="wallet-real">€0.00</span>
+                    </div>
+                    <div class="wallet-item">
+                        <span class="wallet-item-label">Bonus Bal</span>
+                        <span class="wallet-item-val bonus" id="wallet-bonus">€0.00</span>
+                    </div>
+                    <div class="wallet-item">
+                        <span class="wallet-item-label">Free Bets</span>
+                        <span class="wallet-item-val free" id="wallet-free">€0.00</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btn-quick-transaction">
+                    <i data-lucide="plus-circle"></i>
+                    <span>Transact</span>
+                </button>
+                <button class="btn btn-secondary" id="btn-quick-bet">
+                    <i data-lucide="ticket"></i>
+                    <span>Log Bet</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- DASHBOARD CONTAINER -->
+        <main class="content-container active" id="tab-dashboard">
+            <div class="view-header-actions">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="db-exclude-unconverted" onchange="handleExcludeToggle(this.checked)">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Exclude Unconverted Promo Winnings</span>
+                </label>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header-icon"><i data-lucide="dollar-sign"></i></div>
+                    <div class="card-title">Net Profit</div>
+                    <div class="card-value" id="card-net-profit">€0.00</div>
+                    <div class="card-subtext" id="card-profit-indicator">
+                        <i data-lucide="trending-up"></i>
+                        <span>0% of stakes returned</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header-icon"><i data-lucide="percent"></i></div>
+                    <div class="card-title">Return on Investment (ROI)</div>
+                    <div class="card-value" id="card-roi">0.00%</div>
+                    <div class="card-subtext" id="card-roi-indicator">
+                        <span>Overall betting efficiency</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header-icon"><i data-lucide="award"></i></div>
+                    <div class="card-title">Success Rate</div>
+                    <div class="card-value" id="card-winrate">0.0%</div>
+                    <div class="card-subtext" id="card-winrate-indicator">
+                        <span>Percentage of settled won/cashed</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header-icon"><i data-lucide="hash"></i></div>
+                    <div class="card-title">Bets Logged</div>
+                    <div class="card-value" id="card-total-bets">0</div>
+                    <div class="card-subtext" id="card-pending-count">
+                        <span>0 bets currently active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization row -->
+            <div class="visuals-grid">
+                <div class="card chart-card">
+                    <div class="chart-card-header">
+                        <span class="chart-title">Net Profit Over Time</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="profitTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card chart-card">
+                    <div class="chart-card-header">
+                        <span class="chart-title">Wager Outcomes</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="wagerOutcomesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Bets overview -->
+            <div class="card">
+                <div class="section-header">
+                    <span class="section-title">Active & Pending Bets</span>
+                    <button class="btn btn-secondary btn-small" onclick="switchTab('bets')">View All Bets</button>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table" id="dashboard-pending-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Sport</th>
+                                <th>Match / Event</th>
+                                <th>Selection</th>
+                                <th>Odds</th>
+                                <th>Stake</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="dashboard-pending-empty">
+                        <i data-lucide="check-circle-2" class="empty-state-icon"></i>
+                        <p>No active bets. Ready to place a new wager?</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- BETS MANAGER CONTAINER -->
+        <main class="content-container" id="tab-bets">
+            <div class="section-header">
+                <span class="section-title">Sports Betting Log</span>
+                <button class="btn btn-primary" id="btn-add-bet-main">
+                    <i data-lucide="plus"></i>
+                    <span>Log New Bet</span>
+                </button>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-filters">
+                    <div class="filter-group">
+                        <select class="filter-select" id="filter-bet-status">
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="won">Won</option>
+                            <option value="lost">Lost</option>
+                            <option value="cashout">Cashed Out</option>
+                            <option value="void">Void</option>
+                        </select>
+                        <select class="filter-select" id="filter-bet-sport">
+                            <option value="all">All Sports</option>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <table class="data-table" id="bets-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Sport</th>
+                            <th>Match / Event</th>
+                            <th>Selection</th>
+                            <th>Odds</th>
+                            <th>Stake</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Payout</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filled dynamically -->
+                    </tbody>
+                </table>
+                <div class="empty-state" id="bets-empty">
+                    <i data-lucide="clipboard-list" class="empty-state-icon"></i>
+                    <p>No bets logged yet matching the filters.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- TRANSACTIONS CONTAINER -->
+        <main class="content-container" id="tab-transactions">
+            <div class="section-header">
+                <span class="section-title">Bankroll & Wallet Transactions</span>
+                <button class="btn btn-primary" id="btn-add-tx-main">
+                    <i data-lucide="plus"></i>
+                    <span>Log Balance Change</span>
+                </button>
+            </div>
+
+            <!-- CSV Import and Export Segment -->
+            <div class="dashboard-grid" style="margin-bottom: 8px;">
+                <div class="card">
+                    <div class="section-header" style="margin-bottom: 12px;">
+                        <span class="section-title" style="font-size: 16px;">Export Data</span>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="window.BetStorage.exportBets()">
+                            <i data-lucide="download"></i> Export Bets CSV
+                        </button>
+                        <button class="btn btn-secondary" onclick="window.BetStorage.exportTransactions()">
+                            <i data-lucide="download"></i> Export Wallet CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="section-header" style="margin-bottom: 12px;">
+                        <span class="section-title" style="font-size: 16px;">Import Data (.csv)</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="csv-upload-box" onclick="document.getElementById('import-bets-file').click()">
+                            <i data-lucide="upload" style="margin-bottom: 4px; color: var(--accent-purple);"></i>
+                            <div style="font-size: 12px; font-weight: 500;">Import Bets</div>
+                            <input type="file" id="import-bets-file" accept=".csv" onchange="handleCSVImport(this, 'bets')">
+                        </div>
+                        <div class="csv-upload-box" onclick="document.getElementById('import-tx-file').click()">
+                            <i data-lucide="upload" style="margin-bottom: 4px; color: var(--accent-cyan);"></i>
+                            <div style="font-size: 12px; font-weight: 500;">Import Wallet</div>
+                            <input type="file" id="import-tx-file" accept=".csv" onchange="handleCSVImport(this, 'transactions')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-table-container">
+                <table class="data-table" id="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filled dynamically -->
+                    </tbody>
+                </table>
+                <div class="empty-state" id="transactions-empty">
+                    <i data-lucide="arrow-left-right" class="empty-state-icon"></i>
+                    <p>No transactions logged. Use the button above to add funds.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- DETAILED ANALYTICS CONTAINER -->
+        <main class="content-container" id="tab-analytics">
+            <div class="section-header">
+                <span class="section-title">Deep Strategy Analytics</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="analytics-exclude-unconverted" onchange="handleExcludeToggle(this.checked)">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Exclude Unconverted Promo Winnings</span>
+                </label>
+            </div>
+
+            <!-- Analytics Focus Selector -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="section-header" style="margin-bottom: 16px;">
+                    <span class="section-title" style="font-size: 16px;">Analytics Focus</span>
+                </div>
+                <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="analytics-sport-select">Sport / Game</label>
+                        <select class="filter-select" id="analytics-sport-select" style="width: 100%;" onchange="handleAnalyticsFilterChange()">
+                            <option value="all">All Sports</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="analytics-team-select">Team / Competitor</label>
+                        <select class="filter-select" id="analytics-team-select" style="width: 100%;" onchange="handleAnalyticsFilterChange()">
+                            <option value="all">All Teams</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic KPI Grid -->
+            <div class="dashboard-grid" id="analytics-kpi-grid" style="margin-bottom: 24px;">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <!-- Chart & Extra Stats Row -->
+            <div class="visuals-grid" id="analytics-visuals-row" style="margin-bottom: 24px;">
+                <div class="card chart-card">
+                    <div class="chart-card-header">
+                        <span class="chart-title" id="analytics-chart-title">Profit Trend</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="analyticsDetailChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card stats-breakdown-card" id="analytics-extra-stats">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Contextual Performance Tables -->
+            <div class="card" id="analytics-tables-card" style="margin-bottom: 24px;">
+                <div class="section-header" id="analytics-tables-header">
+                    <span class="section-title">Performance Breakdowns</span>
+                </div>
+                <div class="data-table-container" id="analytics-table-container-1">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="data-table-container" id="analytics-table-container-2" style="margin-top: 24px;">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Global Portfolio Overview (Reference cards at the bottom) -->
+            <div class="section-header" style="margin-bottom: 16px;">
+                <span class="section-title" style="font-size: 16px;">Global Portfolio Reference</span>
+            </div>
+            <div class="analytics-grid" id="analytics-global-summary-grid">
+                <!-- Win Conversion Analytics -->
+                <div class="card stats-breakdown-card">
+                    <div class="section-header" style="margin-bottom: 12px;">
+                        <span class="section-title" style="font-size: 16px;">Promotion Conversions</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Bonus Grants</span>
+                        <span class="stats-value" id="stats-bonus-granted">€0.00</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Winnings from Bonus</span>
+                        <span class="stats-value positive" id="stats-bonus-converted">€0.00</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Free Bet Grants</span>
+                        <span class="stats-value" id="stats-free-granted">€0.00</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Winnings from Free Bets</span>
+                        <span class="stats-value positive" id="stats-free-converted">€0.00</span>
+                    </div>
+                </div>
+
+                <!-- Biggest Wins & Losses -->
+                <div class="card stats-breakdown-card">
+                    <div class="section-header" style="margin-bottom: 12px;">
+                        <span class="section-title" style="font-size: 16px;">Record Wagers</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Biggest Single Profit</span>
+                        <div style="text-align: right;">
+                            <span class="stats-value positive" id="stats-biggest-win">€0.00</span>
+                            <div style="font-size: 10px; color: var(--text-muted);" id="stats-biggest-win-details">-</div>
+                        </div>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Biggest Single Loss</span>
+                        <div style="text-align: right;">
+                            <span class="stats-value negative" id="stats-biggest-loss">€0.00</span>
+                            <div style="font-size: 10px; color: var(--text-muted);" id="stats-biggest-loss-details">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wallet Totals Summary -->
+                <div class="card stats-breakdown-card">
+                    <div class="section-header" style="margin-bottom: 12px;">
+                        <span class="section-title" style="font-size: 16px;">Bankroll Overview</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Total Deposits</span>
+                        <span class="stats-value" id="stats-total-deposits">€0.00</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Total Withdrawals</span>
+                        <span class="stats-value" id="stats-total-withdrawals">€0.00</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Turnover (Wager Volume)</span>
+                        <span class="stats-value" id="stats-total-turnover">€0.00</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL OVERLAY: LOG TRANSACTION -->
+    <div class="modal-overlay" id="modal-transaction">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="transaction-modal-title">Log Wallet Transaction</span>
+                <button class="modal-close" onclick="closeModal('transaction')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-transaction" onsubmit="handleTransactionSubmit(event)">
+                    <input type="hidden" id="tx-edit-id">
+                    <div class="form-group">
+                        <label class="form-label" for="tx-type">Transaction Type</label>
+                        <select class="form-input-select" id="tx-type" style="width: 100%;" onchange="toggleTxCorrectionFields()" required>
+                            <option value="deposit">Deposit (Real Cash)</option>
+                            <option value="withdrawal">Withdrawal (Real Cash)</option>
+                            <option value="bonus_grant">Bonus Balance Grant</option>
+                            <option value="free_bet_grant">Free Bet Token Grant</option>
+                            <option value="bonus_to_real">Transfer Bonus to Cash</option>
+                            <option value="bonus_expired">Bonus Expired / Removed</option>
+                            <option value="correction">Balance Correction</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="tx-correction-group" style="display: none;">
+                        <label class="form-label">Correction Details</label>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="tx-correction-wallet" style="font-size: 11px;">Target Wallet</label>
+                                <select class="form-input-select" id="tx-correction-wallet" style="width: 100%;">
+                                    <option value="real">Real Cash Balance</option>
+                                    <option value="bonus">Bonus Balance</option>
+                                    <option value="free">Free Bet Balance</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="tx-correction-direction" style="font-size: 11px;">Adjustment Direction</label>
+                                <select class="form-input-select" id="tx-correction-direction" style="width: 100%;">
+                                    <option value="add">Add (+)</option>
+                                    <option value="sub">Deduct (-)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="tx-amount">Amount (€)</label>
+                            <input class="form-input" type="number" id="tx-amount" min="0.01" step="0.01" placeholder="e.g. 50.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="tx-date">Date</label>
+                            <input class="form-input" type="date" id="tx-date" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tx-notes">Notes / Promotion Details</label>
+                        <input class="form-input" type="text" id="tx-notes" placeholder="e.g. Reload Bonus Code 50MAX">
+                    </div>
+                    <div class="form-footer">
+                        <button class="btn btn-secondary" type="button" onclick="closeModal('transaction')">Cancel</button>
+                        <button class="btn btn-primary" type="submit" id="btn-tx-submit">Submit Transaction</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL OVERLAY: LOG BET -->
+    <div class="modal-overlay" id="modal-bet">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="bet-modal-title">Log Sports Bet</span>
+                <button class="modal-close" onclick="closeModal('bet')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-bet" onsubmit="handleBetSubmit(event)">
+                    <input type="hidden" id="bet-edit-id">
+                    <div class="form-row">
+                        <!-- Autocomplete enabled group -->
+                        <div class="form-group">
+                            <label class="form-label" for="bet-sport">Sport / Game</label>
+                            <input class="form-input" type="text" id="bet-sport-input" autocomplete="off" placeholder="e.g. CS2, Football" required>
+                            <div class="suggestion-menu" id="suggestion-sport"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bet-date">Date</label>
+                            <input class="form-input" type="date" id="bet-date" required>
+                        </div>
+                    </div>
+                    <!-- Simplified Matchup Inputs -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="bet-backed-team-input">Wager Selection (Team to Win)</label>
+                            <input class="form-input" type="text" id="bet-backed-team-input" autocomplete="off" placeholder="e.g. Real Madrid" required>
+                            <div class="suggestion-menu" id="suggestion-backed-team"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bet-opposing-team-input">Opponent / Opposing Team</label>
+                            <input class="form-input" type="text" id="bet-opposing-team-input" autocomplete="off" placeholder="e.g. Manchester City" required>
+                            <div class="suggestion-menu" id="suggestion-opposing-team"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="bet-notes">Notes</label>
+                        <input class="form-input" type="text" id="bet-notes" placeholder="e.g. Handicap -1.5, Map 1 Winner (optional)">
+                    </div>
+                    <div class="form-row bet-financials-row">
+                        <div class="form-group">
+                            <label class="form-label" for="bet-odds">Odds</label>
+                            <input class="form-input" type="number" id="bet-odds" min="1.01" step="0.01" placeholder="1.85" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bet-stake-type">Wallet</label>
+                            <select class="form-input-select" id="bet-stake-type" style="width: 100%; height: 45px;" required>
+                                <option value="real">Real Cash</option>
+                                <option value="bonus">Bonus Bal</option>
+                                <option value="free_bet">Free Bet</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bet-stake">Stake (€)</label>
+                            <input class="form-input" type="number" id="bet-stake" min="0.01" step="0.01" placeholder="1.00" value="1.00" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="bet-status">Outcome / Status</label>
+                            <select class="form-input-select" id="bet-status" style="width: 100%;" onchange="toggleBetStatusPayoutInput()" required>
+                                <option value="pending">Pending (Active)</option>
+                                <option value="won">Won (Pays stake &times; odds)</option>
+                                <option value="won_freebet">Won (Freebet - Net Winnings to Bonus)</option>
+                                <option value="lost">Lost (Return is €0)</option>
+                                <option value="cashout">Cashed Out Early (Partial return)</option>
+                                <option value="void">Void / Refund</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="bet-payout-group" style="display: none;">
+                            <label class="form-label" for="bet-payout">Payout Received (€)</label>
+                            <input class="form-input" type="number" id="bet-payout" min="0.00" step="0.01" placeholder="e.g. 15.50">
+                        </div>
+                    </div>
+                    <div class="form-footer">
+                        <button class="btn btn-secondary" type="button" onclick="closeModal('bet')">Cancel</button>
+                        <button class="btn btn-primary" type="submit" id="btn-bet-submit">Submit Bet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL OVERLAY: SETTLE BET -->
+    <div class="modal-overlay" id="modal-settle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Settle Active Bet</span>
+                <button class="modal-close" onclick="closeModal('settle')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--border-radius-md); margin-bottom: 20px;">
+                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;" id="settle-bet-sport">CS2</div>
+                    <div style="font-family: var(--font-heading); font-size: 16px; font-weight: 600; margin: 4px 0;" id="settle-bet-event">Team A vs Team B</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);" id="settle-bet-details">Winner Team A @ 1.95 | Stake: €20.00 (Real Cash)</div>
+                </div>
+
+                <!-- Quick Settlement Options -->
+                <div class="quick-settle-container" style="margin-bottom: 20px;">
+                    <label class="form-label" style="margin-bottom: 8px; display: block;">Quick Settle</label>
+                    <div style="display: flex; gap: 12px;" id="quick-settle-actions">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div style="display: flex; align-items: center; text-align: center; margin-bottom: 20px; color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div style="flex-grow: 1; height: 1px; background: var(--border-color);"></div>
+                    <span style="padding: 0 10px;">Or Select Custom Outcome</span>
+                    <div style="flex-grow: 1; height: 1px; background: var(--border-color);"></div>
+                </div>
+
+                <form id="form-settle" onsubmit="handleSettleSubmit(event)">
+                    <input type="hidden" id="settle-bet-id">
+                    <div class="form-group">
+                        <label class="form-label" for="settle-status">Outcome</label>
+                        <select class="form-input-select" id="settle-status" style="width: 100%;" onchange="toggleSettlePayoutInput()" required>
+                            <option value="won">Won (Pays stake &times; odds)</option>
+                            <option value="won_freebet">Won (Freebet - Net Winnings to Bonus)</option>
+                            <option value="lost">Lost (Return is €0)</option>
+                            <option value="cashout">Cashed Out Early (Partial return)</option>
+                            <option value="void">Void / Refund (Return is stake)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="settle-payout-group" style="display: none;">
+                        <label class="form-label" for="settle-payout">Payout Received (€)</label>
+                        <input class="form-input" type="number" id="settle-payout" min="0.00" step="0.01" placeholder="e.g. 15.50">
+                    </div>
+                    <div class="form-footer">
+                        <button class="btn btn-secondary" type="button" onclick="closeModal('settle')">Cancel</button>
+                        <button class="btn btn-success" type="submit">Settle Bet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL OVERLAY: MANAGE PROFILES -->
+    <div class="modal-overlay" id="modal-profiles">
+        <div class="modal-content" style="max-width: 580px;">
+            <div class="modal-header">
+                <span class="modal-title">Manage Betting Profiles</span>
+                <button class="modal-close" onclick="closeModal('profiles')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Profiles list -->
+                <div class="profile-list" id="profiles-manager-list">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Create Profile Form -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 20px;">
+                    <span class="section-title" style="font-size: 16px; display: block; margin-bottom: 12px;">Create New Profile</span>
+                    <form id="form-create-profile" onsubmit="handleCreateProfileSubmit(event)" style="display: flex; gap: 12px; align-items: flex-end; margin-bottom: 20px;">
+                        <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+                            <label class="form-label" for="new-profile-name">Profile / Account Name</label>
+                            <input class="form-input" type="text" id="new-profile-name" placeholder="e.g. Personal NBA Account" required>
+                        </div>
+                        <button class="btn btn-primary" type="submit" style="height: 45px;">Create</button>
+                    </form>
+                </div>
+
+                <!-- Import Profile Backup -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <span class="section-title" style="font-size: 16px; display: block; margin-bottom: 12px;">Import Profile Backup (.json)</span>
+                    <div class="csv-upload-box" onclick="document.getElementById('import-profile-json-file').click()" style="padding: 16px;">
+                        <i data-lucide="file-json" style="margin-bottom: 4px; color: var(--accent-purple);"></i>
+                        <div style="font-size: 12px; font-weight: 500;">Click to upload exported profile JSON backup</div>
+                        <input type="file" id="import-profile-json-file" accept=".json" onchange="handleJSONProfileImport(this)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- TOAST ALERTS CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- SIDEBAR MOBILE OVERLAY -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- App Scripts -->
+    <script src="storage.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
